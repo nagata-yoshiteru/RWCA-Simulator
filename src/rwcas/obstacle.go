@@ -1,6 +1,6 @@
 package rwcas
 
-import "github.com/atedja/go-vector"
+import "github.com/nagata-yoshiteru/go-vector"
 
 // Obstacle :
 type Obstacle struct {
