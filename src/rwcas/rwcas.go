@@ -150,7 +150,7 @@ func (rwcas *RWCASimulator) RemoveAgent(agentID int) bool {
 }
 
 // AddWall : Add wall with options
-func (rwcas *RWCASimulator) AddWall(wallType int, vertices []*vector.Vector) (int, bool) {
+func (rwcas *RWCASimulator) AddWall(vertices []*vector.Vector) (int, bool) {
 
 	if len(vertices) < 2 {
 		return -1, false
@@ -221,6 +221,41 @@ func (rwcas *RWCASimulator) RemoveWall(wallID int) bool {
 			delete(rwcas.WallVertices, i)
 		}
 		delete(rwcas.Walls, wallID)
+		return true
+	}
+	return false
+}
+
+// AddObstacle : Add obstacle with options
+func (rwcas *RWCASimulator) AddObstacle(position vector.Vector, shape []vector.Vector, velocity vector.Vector) (int, bool) {
+	obstacle := NewObstacle(rwcas.NextObstacleID, position, shape, velocity)
+	rwcas.Obstacles[rwcas.NextObstacleID] = obstacle
+	rwcas.NextObstacleID++
+	return obstacle.ID, true
+}
+
+// GetObstacle : Get obstacle by obstacleID
+func (rwcas *RWCASimulator) GetObstacle(obstacleID int) (*Obstacle, bool) {
+	if obstacle, exists := rwcas.Obstacles[obstacleID]; exists {
+		return obstacle, true
+	}
+	return nil, false
+}
+
+// GetObstacleIDs : Get obstacle IDs
+func (rwcas *RWCASimulator) GetObstacleIDs() []int {
+	ids := make([]int, 0, len(rwcas.Obstacles))
+	for k := range rwcas.Obstacles {
+		ids = append(ids, k)
+	}
+	sort.Ints(ids)
+	return ids
+}
+
+// SetObstacle : Set obstacle by obstacleID
+func (rwcas *RWCASimulator) SetObstacle(obstacleID int, obstacle *Obstacle) bool {
+	if _, exists := rwcas.Obstacles[obstacleID]; exists {
+		rwcas.Obstacles[obstacleID] = obstacle
 		return true
 	}
 	return false
