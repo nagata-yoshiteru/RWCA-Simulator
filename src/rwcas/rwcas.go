@@ -19,6 +19,7 @@ func init() {
 type RWCASimulator struct {
 	CurrentTime       time.Time
 	Agents            map[int]*Agent
+	AgentTypes        map[string]*AgentType
 	Walls             map[int]*Wall        // ObstacleVertices
 	WallVertices      map[int]*WallVertice // Obstacles
 	Obstacles         map[int]*Obstacle
@@ -35,6 +36,7 @@ func NewRWCASimulator(currentTime time.Time, timeStep float64) *RWCASimulator {
 	sim := &RWCASimulator{
 		CurrentTime:       currentTime,
 		Agents:            make(map[int]*Agent),
+		AgentTypes:        make(map[string]*AgentType, 0),
 		Walls:             make(map[int]*Wall),
 		WallVertices:      make(map[int]*WallVertice),
 		Obstacles:         make(map[int]*Obstacle),
@@ -45,6 +47,17 @@ func NewRWCASimulator(currentTime time.Time, timeStep float64) *RWCASimulator {
 		NextObstacleID:    0,
 	}
 	Rwcas = sim
+
+	sim.AgentTypes["Default AgentType"] = &AgentType{ // append sample agent (walker)
+		Name:             "Default AgentType",
+		Radius:           1.0, // radius size of agent
+		TimeHorizonAgent: 5.0,
+		TimeHorizonObst:  5.0,
+		TimeHorizonWall:  10.0,
+		MaxNeighbors:     100,
+		NeighborDist:     10,
+		MaxSpeed:         5,
+	}
 
 	return sim
 }
@@ -106,7 +119,7 @@ func (rwcas *RWCASimulator) SetTimeStep(timeStep float64) {
 }
 
 // AddAgent : Add agent with options
-func (rwcas *RWCASimulator) AddAgent(agentType int, position vector.Vector, prevVelocity vector.Vector, prefVelocity vector.Vector, goal vector.Vector) (int, bool) {
+func (rwcas *RWCASimulator) AddAgent(agentType *AgentType, position vector.Vector, prevVelocity vector.Vector, prefVelocity vector.Vector, goal vector.Vector) (int, bool) {
 	agent := NewAgent(rwcas.NextAgentID, agentType, position, prevVelocity, prefVelocity, goal)
 	rwcas.Agents[rwcas.NextAgentID] = agent
 	rwcas.NextAgentID++
@@ -259,4 +272,44 @@ func (rwcas *RWCASimulator) SetObstacle(obstacleID int, obstacle *Obstacle) bool
 		return true
 	}
 	return false
+}
+
+// IsSimulationFinished :
+func (rwcas *RWCASimulator) IsSimulationFinished() bool {
+	/* Check if all agents have reached their goals. */
+	for key := range rwcas.Agents {
+		if !rwcas.Agents[key].IsReachedGoal() {
+			return false
+		}
+	}
+	return true
+}
+
+// AddAgentType :
+func (rwcas *RWCASimulator) AddAgentType(name string, radius float64, timeHorizonAgent float64, timeHorizonObst float64, timeHorizonWall float64, maxNeighbors int, neighborDist float64, maxSpeed float64) int {
+	id := len(rwcas.AgentTypes)
+	rwcas.AgentTypes[name] = &AgentType{
+		Name:             name,
+		Radius:           radius, // radius size of agent
+		TimeHorizonAgent: timeHorizonAgent,
+		TimeHorizonObst:  timeHorizonObst,
+		TimeHorizonWall:  timeHorizonWall,
+		MaxNeighbors:     maxNeighbors,
+		NeighborDist:     neighborDist,
+		MaxSpeed:         maxSpeed,
+	}
+	return id
+}
+
+// GetAgentType :
+func (rwcas *RWCASimulator) GetAgentType(name string) (*AgentType, bool) {
+	if agentType, exists := rwcas.AgentTypes[name]; exists {
+		return agentType, true
+	}
+	return nil, false
+}
+
+// GetAgentTypes :
+func (rwcas *RWCASimulator) GetAgentTypes() map[string]*AgentType {
+	return rwcas.AgentTypes
 }

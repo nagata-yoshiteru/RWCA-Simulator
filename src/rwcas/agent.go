@@ -4,28 +4,13 @@ import (
 	"github.com/nagata-yoshiteru/go-vector"
 )
 
-var (
-	AgentTypes []*AgentType
-)
-
 func init() {
-	AgentTypes = append(AgentTypes, &AgentType{ // append sample agent (walker)
-		ID:               0,
-		Name:             "Default Agent",
-		Radius:           1.0, // radius size of agent
-		TimeHorizonAgent: 5.0,
-		TimeHorizonObst:  5.0,
-		TimeHorizonWall:  10.0,
-		MaxNeighbors:     100,
-		NeighborDist:     10,
-		MaxSpeed:         5,
-	})
 }
 
 // Agent :
 type Agent struct {
 	ID                int
-	AgentType         int
+	AgentType         *AgentType
 	Position          vector.Vector
 	PrevVelocity      vector.Vector
 	PrefVelocity      vector.Vector
@@ -40,7 +25,6 @@ type Agent struct {
 
 // AgentType :
 type AgentType struct {
-	ID               int
 	Name             string
 	Radius           float64 // radius size of agent
 	TimeHorizonAgent float64
@@ -76,7 +60,7 @@ type Line struct {
 }
 
 // NewAgent :
-func NewAgent(id int, agentType int, position vector.Vector, prevVelocity vector.Vector, prefVelocity vector.Vector, goal vector.Vector) *Agent {
+func NewAgent(id int, agentType *AgentType, position vector.Vector, prevVelocity vector.Vector, prefVelocity vector.Vector, goal vector.Vector) *Agent {
 	a := &Agent{
 		ID:                id,
 		AgentType:         agentType,
@@ -98,7 +82,7 @@ func NewAgent(id int, agentType int, position vector.Vector, prevVelocity vector
 func NewEmptyAgent(id int) *Agent {
 	return NewAgent(
 		id,
-		0,
+		Rwcas.AgentTypes["Default AgentType"],
 		vector.NewWithValues([]float64{0.0, 0.0, 0.0}), // position = (0, 0, 0)
 		vector.NewWithValues([]float64{0.0, 0.0, 0.0}), // prevVelocity = (0, 0, 0)
 		vector.NewWithValues([]float64{0.0, 0.0, 0.0}), // prefVelocity = (0, 0, 0)
@@ -112,7 +96,7 @@ func (agent *Agent) IsReachedGoal() bool {
 	if agent.Status > 1 {
 		return true
 	}
-	if vector.Subtract(agent.Goal, agent.Position).Magnitude() > AgentTypes[agent.AgentType].Radius {
+	if vector.Subtract(agent.Goal, agent.Position).Magnitude() > agent.AgentType.Radius {
 		return false
 	}
 	agent.Status = 2
@@ -130,12 +114,12 @@ func (agent *Agent) SetGoal(goal vector.Vector) {
 }
 
 // GetAgentType :
-func (agent *Agent) GetAgentType() int {
+func (agent *Agent) GetAgentType() *AgentType {
 	return agent.AgentType
 }
 
 // SetAgentType :
-func (agent *Agent) SetAgentType(agentType int) {
+func (agent *Agent) SetAgentType(agentType *AgentType) {
 	agent.AgentType = agentType
 }
 
